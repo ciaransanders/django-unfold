@@ -16,6 +16,16 @@
   @apply !hidden;
 }
 
+@layer base {
+  #result_list tbody tr th a {
+    @apply text-primary-500 hover:text-primary-600;
+  }
+
+  #result_list tbody tr td a {
+    @apply text-primary-500 hover:text-primary-600;
+  }
+}
+
 @layer utilities {
   .border-spacing-none {
     border-spacing: 0;
