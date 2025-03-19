@@ -29,6 +29,10 @@
   #result_list tbody tr td a {
     @apply text-primary-500 hover:text-primary-600;
   }
+
+  td[class*="field-"] input[readonly] {
+    @apply bg-base-100 cursor-default;
+  }
 }
 
 @layer utilities {
