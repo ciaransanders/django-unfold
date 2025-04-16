@@ -31,7 +31,7 @@
   }
 
   td[class*="field-"] input[readonly] {
-    @apply bg-base-100 cursor-default;
+    @apply bg-base-100 cursor-default dark:bg-base-800;
   }
 }
 
