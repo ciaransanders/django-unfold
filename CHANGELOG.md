@@ -1,4 +1,16 @@
 
+## 0.55.3 (2025-04-22)
+
+- fix: default site url (#1233) ([`7fb87b7`](https://github.com/unfoldadmin/django-unfold/commit/7fb87b7b42519c0b898b7dd2de5c8f1f717d2138))
+- fix: inline tabs formset prefix as fragment (#1229) ([`7529256`](https://github.com/unfoldadmin/django-unfold/commit/75292566e00ca1694e3177594feb9afb497b23e5))
+- chore: release flow python version (#1218) ([`5558443`](https://github.com/unfoldadmin/django-unfold/commit/55584435e6e149f9020a458cb2dc0b0311a1b217))
+
+## 0.55.2 (2025-04-15)
+
+- fix: force inline tab anchor slugify (#1227) ([`b40980a`](https://github.com/unfoldadmin/django-unfold/commit/b40980afe6d848b11c725fc111e322f8c6da4e3f))
+- fix: filter media loading (#1226) ([`df821d7`](https://github.com/unfoldadmin/django-unfold/commit/df821d7bf55cfa641d7e3508c39faa65d1bad45e))
+- fix: disable facet filters for django 4.2 (#1222) ([`62959b2`](https://github.com/unfoldadmin/django-unfold/commit/62959b21d57f3eb455a9d5ba38eb0b31be40c1bf))
+
 ## 0.55.1 (2025-04-11)
 
 - fix: use the same translation for all By {filter_title} (#1220) ([`6e57a36`](https://github.com/unfoldadmin/django-unfold/commit/6e57a3685e746e28038695674ee12cc6451631da))
