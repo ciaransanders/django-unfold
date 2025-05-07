@@ -177,8 +177,10 @@ class UnfoldAdminField(helpers.AdminField):
     def label_tag(self) -> SafeText:
         classes = []
         if not self.field.field.widget.__class__.__name__.startswith(
-            "Unfold"
-        ) and not self.field.field.widget.template_name.startswith("unfold"):
+            ("Unfold", "Thermaline")
+        ) and not self.field.field.widget.template_name.startswith(
+            ("unfold", "thermaline")
+        ):
             return super().label_tag()
 
         # TODO load config from current AdminSite (override Fieldline.__iter__ method)
