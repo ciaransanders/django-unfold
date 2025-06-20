@@ -350,10 +350,6 @@ td .inline-deletelink {
   @apply block lg:mt-2.5;
 }
 
-h3 span:nth-child(3) {
-  @apply ml-auto;
-}
-
 /*******************************************************
  Autocomplete
  *******************************************************/
