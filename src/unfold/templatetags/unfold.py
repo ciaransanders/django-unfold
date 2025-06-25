@@ -604,3 +604,15 @@ def querystring_params(
     result[query_key] = query_value
 
     return result.urlencode()
+
+
+@register.filter
+def fieldset_has_required(fieldset) -> bool:
+    """
+    Checks if any field in the provided fieldset is required.
+    """
+    for line in fieldset:
+        for field in line:
+            if not field.is_readonly and field.field.field.required:
+                return True
+    return False
