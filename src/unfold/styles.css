@@ -47,8 +47,8 @@
 
 @theme {
   --font-sans: 'Inter', sans-serif;
-  --shadow-raised: 0 2px 12px rgba(0, 0, 0, 0.12);
-  --shadow-raised-dark: 0 2px 12px rgba(255, 255, 255, 0.12);
+  --shadow-raised: 0 2px 12px rgb(var(--color-base-300));
+  --shadow-raised-dark: 0 2px 12px rgb(var(--color-base-700));
 }
 
 @theme inline{
@@ -394,7 +394,7 @@ td .inline-deletelink {
 
 .select2-container.select2-container--admin-autocomplete .select2-selection--multiple .select2-selection__clear:after,
 .select2-container.select2-container--admin-autocomplete .select2-selection--single .select2-selection__clear:after {
-  @apply material-symbols-outlined transition-all content-['close'] text-[18px] ;
+  @apply material-symbols-outlined transition-all content-['close\_small'] text-[18px] ;
 }
 
 .select2-container.select2-container--admin-autocomplete .select2-selection--single .select2-selection__arrow {
@@ -462,9 +462,8 @@ td .inline-deletelink {
 }
 
 .select2-container--admin-autocomplete .select2-selection--multiple li.select2-selection__choice .select2-selection__choice__remove:after {
-  @apply h-7 leading-7! material-symbols-outlined;
+  @apply content-['close\_small'] h-7 leading-7! material-symbols-outlined;
 
-  content: "close";
   font-size: 14px;
 }
 
