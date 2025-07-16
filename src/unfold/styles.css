@@ -24,18 +24,6 @@
 @source inline("{md:,lg:,}col-span-{1..12}");
 
 @layer base {
-  #result_list tbody tr th a {
-    @apply text-primary-500! hover:text-primary-600!;
-  }
-
-  #result_list tbody tr td a {
-    @apply text-primary-500 hover:text-primary-600;
-  }
-
-  td[class*="field-"] input[readonly] {
-    @apply bg-base-100 cursor-default dark:bg-base-800;
-  }
-
   *,
   ::after,
   ::before,
@@ -686,4 +674,20 @@ trix-toolbar[id^="trix-toolbar-"] {
 
 .simplebar-horizontal-scrollbar-top .simplebar-track.simplebar-horizontal {
   @apply top-9
+}
+
+/*******************************************************
+* Custom Styles - Ciaran Sanders
+ *******************************************************/
+
+#result_list tbody tr th a {
+    @apply text-primary-500! hover:text-primary-600!;
+}
+
+#result_list tbody tr td a {
+    @apply text-primary-500 hover:text-primary-600;
+}
+
+td[class*="field-"] input[readonly] {
+    @apply bg-base-100 cursor-default dark:bg-base-800;
 }
