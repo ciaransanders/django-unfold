@@ -680,14 +680,20 @@ trix-toolbar[id^="trix-toolbar-"] {
 * Custom Styles - Ciaran Sanders
  *******************************************************/
 
+/* Changelist link styling */
 #result_list tbody tr th a {
     @apply text-primary-500! hover:text-primary-600!;
 }
-
 #result_list tbody tr td a {
     @apply text-primary-500 hover:text-primary-600;
 }
 
+/* Distinguish readonly fields in non-compact mode */
 td[class*="field-"] input[readonly] {
     @apply bg-base-100 cursor-default dark:bg-base-800;
+}
+
+/* Link styling for custom links in chaneform page */
+form .readonly a {
+    @apply text-primary-500! hover:text-primary-600!;
 }
