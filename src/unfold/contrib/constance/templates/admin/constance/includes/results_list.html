@@ -16,8 +16,8 @@
     <tr class="border-t border-base-200 dark:border-base-800 *:font-semibold *:px-3 *:py-2 *:text-left *:text-font-important-light dark:*:text-font-important-dark" {% if fieldset.collapse %}x-show="rowsOpen"{% endif %}>
         <th>{% trans "Name" %}</th>
         <th>{% trans "Value" %}</th>
-        <th>{% trans "Code" %}</th>
         <th>{% trans "Default" %}</th>
+        <th>{% trans "Code" %}</th>
         <th>{% trans "Modified" %}</th>
         <th></th>
     </tr>
@@ -34,13 +34,6 @@
                 {% include "unfold/helpers/form_errors.html" with errors=item.form_field.errors %}
             </td>
 
-
-            <td>
-                <a class="item-name item-anchor" href="#{{ item.name|slugify }}" id="{{ item.name|slugify }}" title="Link to this setting">
-                    {% include "unfold/helpers/label.html" with text=item.name type="info" %}
-                </a>
-            </td>
-
             <td>
                 {% if item.default %}
                     {% include "unfold/helpers/label.html" with text=item.default %}
@@ -50,12 +43,19 @@
             </td>
 
             <td>
+                <a class="item-name item-anchor" href="#{{ item.name|slugify }}" tabindex="-1" id="{{ item.name|slugify }}" title="Link to this setting">
+                    {% include "unfold/helpers/label.html" with text=item.name type="info" %}
+                </a>
+            </td>
+
+            <td>
                 {% include "unfold/helpers/boolean.html" with value=item.modified %}
             </td>
 
             <td class="w-px">
                 {% if not item.is_file %}
                     <a href="#"
+                       tabindex="-1"
                        class="flex items-center gap-1 reset-link whitespace-nowrap"
                        data-default="{% spaceless %}{% if item.is_checkbox %}{% if item.raw_default %} true {% else %} false {% endif %}{% elif item.is_date %}{{ item.raw_default|date:"U" }}{% elif item.is_datetime %}{{ item.raw_default|date:"U" }}{% else %}{{ item.default }}{% endif %}{% endspaceless %}"
                        data-field-type="{% spaceless %}{% if item.is_checkbox %}checkbox{% elif item.is_datetime %}datetime{% elif item.is_date %}date{% endif %}{% endspaceless %}"
