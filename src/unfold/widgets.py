@@ -869,8 +869,8 @@ class UnfoldRelatedFieldWidgetWrapper(RelatedFieldWidgetWrapper):
 
         rel_opts = self.rel.model._meta
         info = (rel_opts.app_label, rel_opts.model_name)
-        if self.can_view_related:
-            context["related_url"] = self.get_related_url(info, "changelist")
+
+        context["related_url"] = self.get_related_url(info, "changelist")
 
         return context
 
