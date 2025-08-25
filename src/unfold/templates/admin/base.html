@@ -25,8 +25,12 @@
             <div class="@container px-4 pb-4 grow">
                 <div id="content" class="{% if not cl.model_admin.list_fullwidth %}container{% endif %} mx-auto {% block coltype %}colM{% endblock %}">
 
-                    {% include "unfold/helpers/messages/errornote.html" with errors=errors %}
-                    {% include "unfold/helpers/messages/error.html" with errors=adminform.form.non_field_errors %}
+                    {% if errors or adminform.form.non_field_errors %}
+                        <div class="flex flex-col gap-4">
+                            {% include "unfold/helpers/messages/errornote.html" with errors=errors %}
+                            {% include "unfold/helpers/messages/error.html" with errors=adminform.form.non_field_errors %}
+                        </div>
+                    {% endif %}
 
                     {% if cl %}
                         {% tab_list "changelist" cl.opts %}

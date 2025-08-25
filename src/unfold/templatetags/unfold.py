@@ -548,7 +548,7 @@ def changeform_data(adminform: AdminForm) -> str:
     return mark_safe(json.dumps(fields))
 
 
-@register.filter(takes_context=True)
+@register.filter
 def changeform_condition(field: BoundField) -> BoundField:
     if isinstance(field.field, dict):
         return field
@@ -635,11 +635,16 @@ def fieldset_has_required(fieldset) -> bool:
 def header_title(context: RequestContext) -> str:
     parts = []
     opts = context.get("opts")
+    current_app = (
+        context.request.current_app
+        if hasattr(context.request, "current_app")
+        else "admin"
+    )
 
     if opts:
         parts.append(
             {
-                "link": reverse_lazy("admin:app_list", args=[opts.app_label]),
+                "link": reverse_lazy(f"{current_app}:app_list", args=[opts.app_label]),
                 "title": opts.app_config.verbose_name,
             }
         )
@@ -648,7 +653,7 @@ def header_title(context: RequestContext) -> str:
             parts.append(
                 {
                     "link": reverse_lazy(
-                        f"admin:{original._meta.app_label}_{original._meta.model_name}_changelist"
+                        f"{current_app}:{original._meta.app_label}_{original._meta.model_name}_changelist"
                     ),
                     "title": original._meta.verbose_name_plural,
                 }
@@ -657,7 +662,7 @@ def header_title(context: RequestContext) -> str:
             parts.append(
                 {
                     "link": reverse_lazy(
-                        f"admin:{original._meta.app_label}_{original._meta.model_name}_change",
+                        f"{current_app}:{original._meta.app_label}_{original._meta.model_name}_change",
                         args=[original.pk],
                     ),
                     "title": original,
@@ -667,7 +672,7 @@ def header_title(context: RequestContext) -> str:
             parts.append(
                 {
                     "link": reverse_lazy(
-                        f"admin:{object._meta.app_label}_{object._meta.model_name}_changelist"
+                        f"{current_app}:{object._meta.app_label}_{object._meta.model_name}_changelist"
                     ),
                     "title": object._meta.verbose_name_plural,
                 }
@@ -676,7 +681,7 @@ def header_title(context: RequestContext) -> str:
             parts.append(
                 {
                     "link": reverse_lazy(
-                        f"admin:{object._meta.app_label}_{object._meta.model_name}_change",
+                        f"{current_app}:{object._meta.app_label}_{object._meta.model_name}_change",
                         args=[object.pk],
                     ),
                     "title": object,
@@ -686,7 +691,7 @@ def header_title(context: RequestContext) -> str:
             parts.append(
                 {
                     "link": reverse_lazy(
-                        f"admin:{opts.app_label}_{opts.model_name}_changelist"
+                        f"{current_app}:{opts.app_label}_{opts.model_name}_changelist"
                     ),
                     "title": opts.verbose_name_plural,
                 }
@@ -694,7 +699,9 @@ def header_title(context: RequestContext) -> str:
     elif object := context.get("object"):
         parts.append(
             {
-                "link": reverse_lazy("admin:app_list", args=[object._meta.app_label]),
+                "link": reverse_lazy(
+                    f"{current_app}:app_list", args=[object._meta.app_label]
+                ),
                 "title": object._meta.app_label,
             }
         )
@@ -702,7 +709,7 @@ def header_title(context: RequestContext) -> str:
         parts.append(
             {
                 "link": reverse_lazy(
-                    f"admin:{object._meta.app_label}_{object._meta.model_name}_changelist",
+                    f"{current_app}:{object._meta.app_label}_{object._meta.model_name}_changelist",
                 ),
                 "title": object._meta.verbose_name_plural,
             }
@@ -711,7 +718,7 @@ def header_title(context: RequestContext) -> str:
         parts.append(
             {
                 "link": reverse_lazy(
-                    f"admin:{object._meta.app_label}_{object._meta.model_name}_change",
+                    f"{current_app}:{object._meta.app_label}_{object._meta.model_name}_change",
                     args=[object.pk],
                 ),
                 "title": object,
@@ -721,7 +728,7 @@ def header_title(context: RequestContext) -> str:
         parts.append(
             {
                 "link": reverse_lazy(
-                    "admin:app_list", args=[model_admin.model._meta.app_label]
+                    f"{current_app}:app_list", args=[model_admin.model._meta.app_label]
                 ),
                 "title": model_admin.model._meta.app_label,
             }
@@ -730,7 +737,7 @@ def header_title(context: RequestContext) -> str:
         parts.append(
             {
                 "link": reverse_lazy(
-                    f"admin:{model_admin.model._meta.app_label}_{model_admin.model._meta.model_name}_changelist",
+                    f"{current_app}:{model_admin.model._meta.app_label}_{model_admin.model._meta.model_name}_changelist",
                 ),
                 "title": model_admin.model._meta.verbose_name_plural,
             }
@@ -758,9 +765,15 @@ def header_title(context: RequestContext) -> str:
     )
 
 
-@register.filter
-def admin_object_app_url(object: Model, arg: str) -> str:
-    return f"admin:{object._meta.app_label}_{object._meta.model_name}_{arg}"
+@register.simple_tag(takes_context=True)
+def admin_object_app_url(context: RequestContext, object: Model, arg: str) -> str:
+    current_app = (
+        context.request.current_app
+        if hasattr(context.request, "current_app")
+        else "admin"
+    )
+
+    return f"{current_app}:{object._meta.app_label}_{object._meta.model_name}_{arg}"
 
 
 @register.filter
