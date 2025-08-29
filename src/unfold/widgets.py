@@ -29,6 +29,7 @@ from django.forms import (
     Select,
     SelectMultiple,
 )
+from django.utils.http import urlencode
 from django.utils.translation import gettext_lazy as _
 
 from .exceptions import UnfoldException
@@ -865,6 +866,16 @@ class UnfoldBooleanSwitchWidget(CheckboxInput):
 
 class UnfoldRelatedFieldWidgetWrapper(RelatedFieldWidgetWrapper):
     template_name = "unfold/widgets/related_widget_wrapper.html"
+
+    def __init__(self, *args, **kwargs):
+        self.limit_choices_to = kwargs.pop("limit_choices_to", {})
+        super().__init__(*args, **kwargs)
+
+    def get_related_url(self, info, action, *args) -> str:
+        url = super().get_related_url(info, action, *args)
+        if action == "changelist":
+            url += f"?{urlencode(self.limit_choices_to or {})}"
+        return url
 
     def get_context(self, *args, **kwargs) -> dict[str, Any]:
         context = super().get_context(*args, **kwargs)
