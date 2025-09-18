@@ -137,14 +137,25 @@ function searchCommand() {
         return;
       }
 
-      this.items = document
-        .getElementById("command-results-list")
-        .querySelectorAll("li");
-      this.totalItems = this.items.length;
+      const commandResultsList = document.getElementById(
+        "command-results-list"
+      );
+      if (commandResultsList) {
+        this.items = commandResultsList.querySelectorAll("li");
+        this.totalItems = this.items.length;
+      } else {
+        this.items = undefined;
+        this.totalItems = 0;
+      }
 
       if (event.target.id === "command-results") {
         this.currentIndex = 0;
-        this.totalItems = this.items.length;
+
+        if (this.items) {
+          this.totalItems = this.items.length;
+        } else {
+          this.totalItems = 0;
+        }
       }
 
       this.hasResults = this.totalItems > 0;
@@ -446,9 +457,22 @@ const DEFAULT_CHART_OPTIONS = {
         width: 0,
       },
       ticks: {
-        display: false,
-        font: {
-          size: 13,
+        color: "#9ca3af",
+        display: function (context) {
+          return context.chart.data.datasets.some((dataset) => {
+            return (
+              dataset.hasOwnProperty("displayYAxis") && dataset.displayYAxis
+            );
+          });
+        },
+        callback: function (value) {
+          const suffix = this.chart.data.datasets.find(
+            (dataset) => dataset.suffixYAxis
+          )?.suffixYAxis;
+          if (suffix) {
+            return `${value} ${suffix}`;
+          }
+          return value;
         },
       },
       grid: {
@@ -521,7 +545,7 @@ const renderCharts = () => {
       new Chart(ctx, {
         type: type || "bar",
         data: parsedData,
-        options: options ? JSON.parse(options) : DEFAULT_CHART_OPTIONS,
+        options: options ? JSON.parse(options) : { ...DEFAULT_CHART_OPTIONS },
       })
     );
   }
