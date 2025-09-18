@@ -29,6 +29,7 @@ from django.forms import (
     Select,
     SelectMultiple,
 )
+from django.urls.exceptions import NoReverseMatch
 from django.utils.http import urlencode
 from django.utils.translation import gettext_lazy as _
 
@@ -883,7 +884,10 @@ class UnfoldRelatedFieldWidgetWrapper(RelatedFieldWidgetWrapper):
         rel_opts = self.rel.model._meta
         info = (rel_opts.app_label, rel_opts.model_name)
 
-        context["related_url"] = self.get_related_url(info, "changelist")
+        try:
+            context["related_url"] = self.get_related_url(info, "changelist")
+        except NoReverseMatch:
+            pass
 
         return context
 
