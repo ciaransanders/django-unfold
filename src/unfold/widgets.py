@@ -1,6 +1,7 @@
 from collections.abc import Callable
 from typing import Any
 
+from django.conf import settings
 from django.contrib.admin.options import VERTICAL
 from django.contrib.admin.sites import AdminSite
 from django.contrib.admin.widgets import (
@@ -34,7 +35,7 @@ from django.urls.exceptions import NoReverseMatch
 from django.utils.http import urlencode
 from django.utils.translation import gettext_lazy as _
 
-from .exceptions import UnfoldException
+from unfold.exceptions import UnfoldException
 
 BUTTON_CLASSES = [
     "border",
@@ -277,6 +278,7 @@ SWITCH_CLASSES = [
 ]
 
 FILE_CLASSES = [
+    "bg-white",
     "border",
     "border-base-200",
     "flex",
@@ -291,6 +293,7 @@ FILE_CLASSES = [
     "focus-within:outline-primary-600",
     "group-[.errors]:border-red-600",
     "focus-within:group-[.errors]:outline-red-500",
+    "dark:bg-base-900",
     "dark:border-base-700",
     "dark:group-[.errors]:border-red-500",
     "dark:focus-within:group-[.errors]:outline-red-500",
@@ -716,13 +719,14 @@ class UnfoldAdminSelect2Widget(Select):
             attrs = {}
 
         attrs["data-theme"] = "admin-autocomplete"
-        attrs["class"] = "unfold-admin-autocomplete admin-autocomplete"
+        attrs["class"] = "unfold-admin-autocomplete"
 
         super().__init__(attrs, choices)
 
     class Media:
+        extra = "" if settings.DEBUG else ".min"
         js = (
-            "admin/js/vendor/jquery/jquery.js",
+            f"admin/js/vendor/jquery/jquery{extra}.js",
             "admin/js/vendor/select2/select2.full.js",
             "admin/js/jquery.init.js",
             "unfold/js/select2.init.js",
@@ -757,8 +761,9 @@ class UnfoldAdminSelect2MultipleWidget(SelectMultiple):
         super().__init__(attrs, choices)
 
     class Media:
+        extra = "" if settings.DEBUG else ".min"
         js = (
-            "admin/js/vendor/jquery/jquery.js",
+            f"admin/js/vendor/jquery/jquery{extra}.js",
             "admin/js/vendor/select2/select2.full.js",
             "admin/js/jquery.init.js",
             "unfold/js/select2.init.js",
