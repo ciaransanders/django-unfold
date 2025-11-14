@@ -738,6 +738,9 @@ div.djangoql-completion .syntax-help {
 #result_list tbody tr td a {
     @apply text-primary-500 hover:text-primary-600;
 }
+.thermaline-link {
+    @apply text-primary-500! hover:text-primary-600!;
+}
 
 /* Distinguish readonly fields in non-compact mode */
 td[class*="field-"] input[readonly] {
