@@ -12,12 +12,12 @@
             {% endfor %}
 
             {% if inlines_list %}
-                <a x-on:click="activeTab = 'general'" x-bind:class="{'active': activeTab == 'general'}">
+                <a x-on:click="activeTab = 'general'" x-bind:class="{'active': activeTab == 'general'}" class="hover:cursor-pointer">
                     {% trans "General" %}
                 </a>
 
                 {% for inline in inlines_list %}
-                    <a x-on:click="activeTab = '{{ inline.formset.prefix|slugify }}'" x-bind:class="{'active': activeTab == '{{ inline.formset.prefix|slugify }}'}">
+                    <a x-on:click="activeTab = '{{ inline.formset.prefix|slugify }}'" x-bind:class="{'active': activeTab == '{{ inline.formset.prefix|slugify }}'}" class="hover:cursor-pointer">
                         {% if inline.formset.total_error_count %}<span class="material-symbols-outlined text-red-500 align-text-bottom">warning</span>{% endif %}
                         {% if inline.formset.max_num == 1 %}
                             {{ inline.opts.verbose_name|capfirst }}
