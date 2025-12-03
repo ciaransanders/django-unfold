@@ -880,7 +880,16 @@ class UnfoldRelatedFieldWidgetWrapper(RelatedFieldWidgetWrapper):
     def get_related_url(self, info, action, *args) -> str:
         url = super().get_related_url(info, action, *args)
         if action == "changelist":
-            url += f"?{urlencode(self.limit_choices_to or {})}"
+            # Parse and reformat limit choices to a list of tuple pairs
+            limit_choices_to = []
+            for key, value in self.limit_choices_to.items():
+                if type(value) is list:
+                    for val in value:
+                        limit_choices_to.append((key, val))
+                else:
+                    limit_choices_to.append((key, value))
+            # Apply limit choices to filters in url
+            url += f"?{urlencode(limit_choices_to)}"
         return url
 
     def get_context(self, *args, **kwargs) -> dict[str, Any]:
