@@ -10,7 +10,40 @@ window.addEventListener("load", (e) => {
   warnWithoutSaving();
 
   tabNavigation();
+
+  scrollSidebarNav();
 });
+
+/*************************************************************
+ * Scroll sidebar to active item
+ *************************************************************/
+function scrollSidebarNav() {
+  const sidebarNav = document.getElementById("nav-sidebar-apps");
+
+  if (!sidebarNav) {
+    return;
+  }
+
+  const instance = SimpleBar.instances.get(sidebarNav);
+  const activeItem = sidebarNav.querySelector("a.active");
+
+  if (!instance || !activeItem) {
+    return;
+  }
+
+  function isActiveItemVisible() {
+    const sidebarRect = sidebarNav.getBoundingClientRect();
+    const itemRect = activeItem.getBoundingClientRect();
+
+    return (
+      itemRect.top >= sidebarRect.top && itemRect.bottom <= sidebarRect.bottom
+    );
+  }
+
+  if (instance && !isActiveItemVisible()) {
+    instance.getScrollElement().scroll(0, activeItem.offsetTop);
+  }
+}
 
 /*************************************************************
  * Move not visible tab items to dropdown
@@ -415,14 +448,19 @@ const dateTimeShortcutsOverlay = () => {
     }
   });
 
-  const targets = document.querySelectorAll(".calendarbox, .clockbox");
+  const findCalendars = () => {
+    for (const target of document.querySelectorAll(".calendarbox, .clockbox")) {
+      observer.observe(target, {
+        attributes: true,
+        attributeFilter: ["style"],
+      });
+    }
+  };
 
-  for (const target of targets) {
-    observer.observe(target, {
-      attributes: true,
-      attributeFilter: ["style"],
-    });
-  }
+  new MutationObserver(findCalendars).observe(document.body, {
+    childList: true,
+    subtree: true,
+  });
 };
 
 /*************************************************************
@@ -685,3 +723,17 @@ const renderCharts = () => {
     changeDarkModeSettings();
   });
 };
+
+function getCurrentTab() {
+  const fragment = window.location.hash?.replace('#', '');
+
+  if (!fragment) {
+    return null
+  }
+
+  if (!document.getElementById(`${fragment}-group`)) {
+    return null;
+  }
+
+  return fragment
+}

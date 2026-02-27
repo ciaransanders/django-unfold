@@ -36,7 +36,7 @@ from django.utils.translation import gettext_lazy as _
 from unfold.widgets import (
     BASE_INPUT_CLASSES,
     INPUT_CLASSES,
-    UnfoldAdminPasswordInput,
+    UnfoldAdminPasswordWidget,
     UnfoldAdminRadioSelectWidget,
     UnfoldAdminSelectWidget,
 )
@@ -57,8 +57,8 @@ class ActionForm(forms.Form):
                         "group-[.changelist-actions]:!bg-white/20",
                         "group-[.changelist-actions]:font-medium",
                         "group-[.changelist-actions]:grow",
-                        "group-[.changelist-actions]:px-3",
-                        "group-[.changelist-actions]:py-2",
+                        "group-[.changelist-actions]:px-2",
+                        "group-[.changelist-actions]:py-1",
                         "group-[.changelist-actions]:pr-8",
                         "group-[.changelist-actions]:rounded-default",
                         "group-[.changelist-actions]:!text-current",
@@ -104,17 +104,13 @@ class AuthenticationForm(AdminAuthenticationForm):
 
 
 class UserCreationForm(BaseUserCreationForm):
-    def __init__(
-        self,
-        *args,
-        **kwargs,
-    ) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
 
-        self.fields["password1"].widget = UnfoldAdminPasswordInput(
+        self.fields["password1"].widget = UnfoldAdminPasswordWidget(
             attrs={"autocomplete": "new-password"}
         )
-        self.fields["password2"].widget = UnfoldAdminPasswordInput(
+        self.fields["password2"].widget = UnfoldAdminPasswordWidget(
             attrs={"autocomplete": "new-password"}
         )
 

@@ -2,7 +2,6 @@ import copy
 import hashlib
 import time
 from collections.abc import Callable
-from http import HTTPStatus
 from typing import Any
 from urllib.parse import parse_qs, urlparse
 
@@ -29,14 +28,6 @@ except ImportError:
 
 from unfold.settings import get_config
 from unfold.utils import convert_color
-from unfold.widgets import (
-    BUTTON_CLASSES,
-    CHECKBOX_CLASSES,
-    FILE_CLASSES,
-    INPUT_CLASSES,
-    RADIO_CLASSES,
-    SWITCH_CLASSES,
-)
 
 
 class UnfoldAdminSite(AdminSite):
@@ -64,11 +55,6 @@ class UnfoldAdminSite(AdminSite):
         urlpatterns = (
             [
                 path("search/", self.admin_view(self.search), name="search"),
-                path(
-                    "toggle-sidebar/",
-                    self.admin_view(self.toggle_sidebar),
-                    name="toggle_sidebar",
-                ),
             ]
             + extra_urls
             + super().get_urls()
@@ -81,14 +67,7 @@ class UnfoldAdminSite(AdminSite):
 
         sidebar_config = self._get_config("SIDEBAR", request)
         data = {
-            "form_classes": {
-                "text_input": " ".join(INPUT_CLASSES),
-                "checkbox": " ".join(CHECKBOX_CLASSES),
-                "button": " ".join(BUTTON_CLASSES),
-                "radio": " ".join(RADIO_CLASSES),
-                "switch": " ".join(SWITCH_CLASSES),
-                "file": " ".join(FILE_CLASSES),
-            },
+            "form_classes": self._get_config("FORMS", request).get("classes"),
             "site_title": self._get_config("SITE_TITLE", request),
             "site_header": self._get_config("SITE_HEADER", request),
             "site_url": self._get_config("SITE_URL", request),
@@ -104,6 +83,7 @@ class UnfoldAdminSite(AdminSite):
             "show_history": self._get_config("SHOW_HISTORY", request),
             "show_view_on_site": self._get_config("SHOW_VIEW_ON_SITE", request),
             "show_languages": self._get_config("SHOW_LANGUAGES", request),
+            "language_flags": self._get_config("LANGUAGE_FLAGS", request),
             "show_back_button": self._get_config("SHOW_BACK_BUTTON", request),
             "theme": self._get_config("THEME", request),
             "border_radius": self._get_config("BORDER_RADIUS", request),
@@ -170,16 +150,6 @@ class UnfoldAdminSite(AdminSite):
         return TemplateResponse(
             request, self.index_template or "admin/index.html", context
         )
-
-    def toggle_sidebar(
-        self, request: HttpRequest, extra_context: dict[str, Any] | None = None
-    ) -> HttpResponse:
-        if "toggle_sidebar" not in request.session:
-            request.session["toggle_sidebar"] = True
-        else:
-            request.session["toggle_sidebar"] = not request.session["toggle_sidebar"]
-
-        return HttpResponse(status=HTTPStatus.OK)
 
     def _search_apps(
         self, app_list: list[dict[str, Any]], search_term: str
@@ -375,6 +345,15 @@ class UnfoldAdminSite(AdminSite):
 
         for group in copy.deepcopy(navigation):
             group["items"] = self._get_navigation_items(request, group["items"], tabs)
+
+            # Badge callbacks
+            if "badge" in group and isinstance(group["badge"], str):
+                try:
+                    callback = import_string(group["badge"])
+                    group["badge_callback"] = lazy(callback)(request)
+                except ImportError:
+                    pass
+
             results.append(group)
 
         return results
@@ -490,11 +469,11 @@ class UnfoldAdminSite(AdminSite):
         return False
 
     def _replace_values(self, target: dict, source: dict, request: HttpRequest):
-        for key in source.keys():
-            if source[key] is not None and callable(source[key]):
-                target[key] = source[key](request)
+        for key, value in source.items():
+            if value is not None and callable(value):
+                target[key] = value(request)
             else:
-                target[key] = source[key]
+                target[key] = value
 
         return target
 
@@ -572,10 +551,10 @@ class UnfoldAdminSite(AdminSite):
         colors = self._get_config(key, *args)
 
         for name, weights in colors.items():
-            weights = self._get_value(weights, *args)
-            colors[name] = weights
+            color_weights = self._get_value(weights, *args)
+            colors[name] = color_weights
 
-            for weight, value in weights.items():
+            for weight, value in color_weights.items():
                 colors[name][weight] = convert_color(value)
 
         return colors
@@ -620,7 +599,7 @@ class UnfoldAdminSite(AdminSite):
             for item in items
         ]
 
-    def _get_value(self, value: str | Callable | None, *args: Any) -> str | None:
+    def _get_value(self, value: str | Callable | None, *args: Any) -> Any:
         if value is None:
             return None
 

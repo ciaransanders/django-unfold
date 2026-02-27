@@ -1,6 +1,6 @@
 from django import forms
 from django.conf import settings
-from django.contrib.admin.options import HORIZONTAL
+from django.contrib.admin.options import HORIZONTAL, ModelAdmin
 from django.contrib.admin.widgets import AutocompleteSelect, AutocompleteSelectMultiple
 from django.db.models import Field as ModelField
 from django.forms import (
@@ -11,10 +11,9 @@ from django.forms import (
 from django.http import HttpRequest
 from django.utils.translation import gettext_lazy as _
 
-from unfold.admin import ModelAdmin
 from unfold.widgets import (
     INPUT_CLASSES,
-    UnfoldAdminCheckboxSelectMultiple,
+    UnfoldAdminCheckboxSelectMultipleWidget,
     UnfoldAdminRadioSelectWidget,
     UnfoldAdminSelectMultipleWidget,
     UnfoldAdminSelectWidget,
@@ -85,13 +84,13 @@ class AutocompleteDropdownForm(forms.Form):
 
 class CheckboxForm(forms.Form):
     field = MultipleChoiceField
-    widget = UnfoldAdminCheckboxSelectMultiple
+    widget = UnfoldAdminCheckboxSelectMultipleWidget
 
     def __init__(
         self,
         name: str,
         label: str,
-        choices: tuple,
+        choices: tuple | list,
         *args,
         **kwargs,
     ) -> None:
@@ -183,7 +182,12 @@ class SingleNumericForm(forms.Form):
 
 class RangeNumericForm(forms.Form):
     def __init__(
-        self, name: str, min: float = None, max: float = None, *args, **kwargs
+        self,
+        name: str,
+        min: float | None = None,
+        max: float | None = None,
+        *args,
+        **kwargs,
     ) -> None:
         self.name = name
         super().__init__(*args, **kwargs)

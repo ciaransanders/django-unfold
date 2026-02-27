@@ -2,10 +2,13 @@ from typing import Any
 
 import django
 from django.contrib import messages
+from django.contrib.admin.filters import ListFilter
 from django.contrib.admin.views.main import ERROR_FLAG, PAGE_VAR
 from django.contrib.admin.views.main import ChangeList as BaseChangeList
 from django.contrib.auth.mixins import PermissionRequiredMixin
-from django.http import HttpRequest
+from django.db.models import QuerySet
+from django.http import HttpRequest, JsonResponse
+from django.views.generic import ListView
 
 from unfold.exceptions import UnfoldException
 from unfold.forms import DatasetChangeListSearchForm
@@ -25,26 +28,39 @@ class DatasetChangeList(ChangeList):
     is_dataset = True
 
     def __init__(self, request: HttpRequest, *args: Any, **kwargs: Any) -> None:
-        search_var = f"{kwargs.get('model')._meta.model_name}-q"
-        page_var = f"{kwargs.get('model')._meta.model_name}-p"
+        self.search_var = f"{kwargs.get('model')._meta.model_name}-q"
+        self.page_var = f"{kwargs.get('model')._meta.model_name}-p"
 
-        _search_form = DatasetChangeListSearchForm(request.GET, search_var=search_var)
+        _search_form = DatasetChangeListSearchForm(
+            request.GET, search_var=self.search_var
+        )
         if not _search_form.is_valid():
             for error in _search_form.errors.values():
                 messages.error(request, ", ".join(error))
 
-        self.dataset_search_query = _search_form.cleaned_data.get(search_var) or ""
+        self.dataset_search_query = _search_form.cleaned_data.get(self.search_var) or ""
 
         super().__init__(request, *args, **kwargs)
 
+    def get_results(self, request: HttpRequest) -> None:
         try:
-            self.page_num = int(request.GET.get(page_var, 1))
+            self.page_num = int(request.GET.get(self.page_var, 1))
         except ValueError:
             self.page_num = 1
 
-    def get_queryset(self, request, exclude_parameters=None):
+        super().get_results(request)
+
+    def get_queryset(
+        self, request: HttpRequest, exclude_parameters: list[str | None] | None = None
+    ) -> QuerySet:
         self.query = self.dataset_search_query
         return super().get_queryset(request, exclude_parameters)
+
+    def get_filters(
+        self, request: str
+    ) -> tuple[list[ListFilter], bool, dict[str, bool | str], bool, bool]:
+        # Disable filters for dataset
+        return ([], False, {}, False, False)
 
 
 class UnfoldModelAdminViewMixin(PermissionRequiredMixin):
@@ -78,4 +94,27 @@ class UnfoldModelAdminViewMixin(PermissionRequiredMixin):
                 "title": self.title,
                 "model_admin": self.model_admin,
             },
+        )
+
+
+class BaseAutocompleteView(ListView):
+    paginate_by = 20
+
+    def get(self, request: HttpRequest, *args: Any, **kwargs: Any) -> JsonResponse:
+        super().get(request, *args, **kwargs)
+        context = self.get_context_data()
+
+        return JsonResponse(
+            {
+                "results": [
+                    {
+                        "id": str(obj.pk),
+                        "text": str(obj),
+                    }
+                    for obj in context["object_list"]
+                ],
+                "pagination": {
+                    "more": context["page_obj"].has_next(),
+                },
+            }
         )
