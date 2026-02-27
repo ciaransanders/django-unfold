@@ -12,14 +12,14 @@
             {% endfor %}
 
             {% if inlines_list or datasets_list %}
-                <a x-on:click="activeTab = 'general'" x-bind:class="{'active': activeTab == 'general'}">
+                <a x-on:click="activeTab = 'general'" x-bind:class="{'active': activeTab == 'general'}" class="select-none hover:cursor-pointer">
                     {% trans "General" %}
 
                     {% include "unfold/helpers/tab_error_count.html" with error_count=error_count %}
                 </a>
 
                 {% for inline in inlines_list %}
-                    <a x-on:click="activeTab = '{{ inline.formset.prefix|slugify }}'" x-bind:class="{'active': activeTab == '{{ inline.formset.prefix|slugify }}'}" class="hover:cursor-pointer">
+                    <a x-on:click="activeTab = '{{ inline.formset.prefix|slugify }}'" x-bind:class="{'active': activeTab == '{{ inline.formset.prefix|slugify }}'}" class="hover:cursor-pointer select-none">
                         {% if inline.formset.max_num == 1 %}
                             {{ inline.opts.verbose_name|capfirst }}
                         {% else %}
