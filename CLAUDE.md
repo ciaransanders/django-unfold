@@ -9,6 +9,7 @@ Diff baseline: `git diff main...custom`.
 ## 1. Python API additions
 
 ### `list_filter_buttons_top` ModelAdmin option
+
 - `src/unfold/admin.py`: new `list_filter_buttons_top = False` flag on `ModelAdmin`.
 - Documented in `docs/configuration/modeladmin.md`.
 - Renders the filter Apply/Clear action buttons at the **top** of the list filter
@@ -17,6 +18,7 @@ Diff baseline: `git diff main...custom`.
   this flag and adjust padding/margins).
 
 ### `UnfoldRelatedFieldWidgetWrapper` + related-objects lookup ("magnifying glass")
+
 - `src/unfold/widgets.py`: new `UnfoldRelatedFieldWidgetWrapper(RelatedFieldWidgetWrapper)`.
   - Adds a search/lookup (magnifying glass) link that opens the related model's
     changelist. Overrides `get_related_url` / `get_context` to inject `related_url`.
@@ -32,13 +34,6 @@ Diff baseline: `git diff main...custom`.
   `dismissRelatedLookupPopup` extended to handle `<select>` (select2 autocomplete)
   targets — injects a new `Option` and dispatches `change`; now also receives/uses the
   chosen item's display name.
-
-> **Removed:** a `fieldset_has_required` template filter used to live here (it drew a red
-> `*` on fieldset tabs containing required fields). Its template usage in
-> `fieldsets_tabs.html` was already lost in an earlier `main` merge, leaving the filter
-> orphaned, so it was deleted. If required-field tab markers are wanted again, both the
-> filter and its `{% if fieldset|fieldset_has_required %}*{% endif %}` usage must be
-> re-added.
 
 ## 2. Template / layout changes
 
@@ -63,6 +58,7 @@ Diff baseline: `git diff main...custom`.
 ## 3. CSS (`src/unfold/styles.css`)
 
 A dedicated `/* Custom Styles - Ciaran Sanders */` block adds:
+
 - Changelist link styling: `#result_list tbody tr th a` / `td a` → primary color.
 - `.thermaline-link` utility class → primary-colored link styling.
 - Readonly field distinction (non-compact mode):
