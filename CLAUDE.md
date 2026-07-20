@@ -8,6 +8,19 @@ Diff baseline: `git diff main...custom`.
 
 ## 1. Python API additions
 
+### `changeform_fullwidth` ModelAdmin option
+
+- `src/unfold/admin.py`: new `changeform_fullwidth = False` flag on `ModelAdmin`
+  (mirrors the existing `list_fullwidth` option, but for the change **form** rather than
+  the changelist).
+- Documented in `docs/configuration/modeladmin.md`.
+- `src/unfold/templates/admin/base.html`: the `messages` and `#content` wrappers drop the
+  `container` class when `adminform.model_admin.changeform_fullwidth` is set, so the
+  change form spans the full page width. The condition is ANDed alongside the existing
+  `list_fullwidth` / `is_fullwidth` checks.
+- **Upstream candidate:** unlike the other items here, this one is a clean symmetric
+  addition and has good potential to be merged into `main`. Keep it minimal/upstreamable.
+
 ### `list_filter_buttons_top` ModelAdmin option
 
 - `src/unfold/admin.py`: new `list_filter_buttons_top = False` flag on `ModelAdmin`.
