@@ -630,18 +630,6 @@ def querystring_params(
     return result.urlencode()
 
 
-@register.filter
-def fieldset_has_required(fieldset) -> bool:
-    """
-    Checks if any field in the provided fieldset is required.
-    """
-    for line in fieldset:
-        for field in line:
-            if not field.is_readonly and field.field.field.required:
-                return True
-    return False
-
-
 @register.simple_tag(name="unfold_querystring", takes_context=True)
 def unfold_querystring(context, *args, **kwargs):
     """
