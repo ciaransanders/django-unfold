@@ -1,23 +1,35 @@
 import copy
 from typing import Any
 
-from django.contrib.admin import helpers
+from django.conf import settings
+from django.contrib import messages
+from django.contrib.admin.options import BaseModelAdmin
 from django.contrib.admin.sites import AdminSite
-from django.contrib.admin.widgets import RelatedFieldWidgetWrapper
+from django.contrib.admin.widgets import (
+    FilteredSelectMultiple,
+    RelatedFieldWidgetWrapper,
+)
 from django.db import models
 from django.db.models.fields import Field
 from django.db.models.fields.related import ForeignKey, ManyToManyField
+from django.forms.fields import Field as FormField
 from django.forms.fields import TypedChoiceField
 from django.forms.models import ModelChoiceField, ModelMultipleChoiceField
 from django.forms.widgets import SelectMultiple
 from django.http import HttpRequest
+from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 
 from unfold import widgets
 from unfold.overrides import FORMFIELD_OVERRIDES
+from unfold.utils import get_setting_value
 
 
-class BaseModelAdminMixin:
+class FormFieldModelAdminMixin(BaseModelAdmin):
+    # List of all db fields which are not available in autocomplete_fields
+    _autocomplete_fields_missing: list[str] = []
+    autocomplete_fields_excluded_from_warnings: list[str] = []
+
     def __init__(self, model: type[models.Model], admin_site: AdminSite) -> None:
         overrides = copy.deepcopy(FORMFIELD_OVERRIDES)
 
@@ -28,22 +40,9 @@ class BaseModelAdminMixin:
 
         super().__init__(model, admin_site)
 
-    def changeform_view(
-        self,
-        request: HttpRequest,
-        object_id: str | None = None,
-        form_url: str = "",
-        extra_context: dict[str, Any] | None = None,
-    ) -> Any:
-        from unfold.forms import AdminForm, Fieldline
-
-        helpers.AdminForm = AdminForm
-        helpers.Fieldline = Fieldline
-        return super().changeform_view(request, object_id, form_url, extra_context)
-
     def formfield_for_choice_field(
-        self, db_field: Field, request: HttpRequest, **kwargs
-    ) -> TypedChoiceField:
+        self, db_field: Field, request: HttpRequest, **kwargs: Any
+    ) -> TypedChoiceField | None:
         if "widget" not in kwargs:
             if db_field.name in self.radio_fields:
                 kwargs["widget"] = widgets.UnfoldAdminRadioSelectWidget(
@@ -60,15 +59,13 @@ class BaseModelAdminMixin:
         return super().formfield_for_choice_field(db_field, request, **kwargs)
 
     def formfield_for_foreignkey(
-        self, db_field: ForeignKey, request: HttpRequest, **kwargs
+        self, db_field: ForeignKey, request: HttpRequest, **kwargs: Any
     ) -> ModelChoiceField | None:
-        db = kwargs.get("using")
-
         # Overrides widgets for all related fields
         if "widget" not in kwargs:
             if db_field.name in self.raw_id_fields:
                 kwargs["widget"] = widgets.UnfoldForeignKeyRawIdWidget(
-                    db_field.remote_field, self.admin_site, using=db
+                    db_field.remote_field, self.admin_site, using=kwargs.get("using")
                 )
             elif (
                 db_field.name not in self.get_autocomplete_fields(request)
@@ -77,36 +74,40 @@ class BaseModelAdminMixin:
                 kwargs["widget"] = widgets.UnfoldAdminSelectWidget()
                 kwargs["empty_label"] = _("Select value")
 
-        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+        formfield = super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+        if self._show_ui_warnings(request):
+            self._check_autocomplete_field(db_field, formfield, request)
+
+        return formfield
 
     def formfield_for_manytomany(
         self,
         db_field: ManyToManyField,
         request: HttpRequest,
-        **kwargs,
-    ) -> ModelMultipleChoiceField:
-        if "widget" not in kwargs:
-            if db_field.name in self.raw_id_fields:
-                kwargs["widget"] = widgets.UnfoldAdminTextInputWidget()
-
-        form_field = super().formfield_for_manytomany(db_field, request, **kwargs)
+        **kwargs: Any,
+    ) -> ModelMultipleChoiceField | None:
+        formfield = super().formfield_for_manytomany(db_field, request, **kwargs)
 
         # If M2M uses intermediary model, form_field will be None
-        if not form_field:
+        if not formfield:
             return None
 
-        if isinstance(form_field.widget, SelectMultiple):
-            form_field.widget.attrs["class"] = " ".join(widgets.SELECT_CLASSES)
+        if isinstance(formfield.widget, SelectMultiple):
+            formfield.widget.attrs["class"] = " ".join(widgets.SELECT_CLASSES)
 
-        return form_field
+        if self._show_ui_warnings(request):
+            self._check_autocomplete_field(db_field, formfield, request)
+
+        return formfield
 
     def formfield_for_nullboolean_field(
-        self, db_field: Field, request: HttpRequest, **kwargs
-    ) -> Field | None:
+        self, db_field: Field, request: HttpRequest, **kwargs: Any
+    ) -> FormField | None:
         if "widget" not in kwargs:
             if db_field.choices:
                 kwargs["widget"] = widgets.UnfoldAdminSelectWidget(
-                    choices=db_field.choices
+                    choices=list(db_field.choices)
                 )
             else:
                 kwargs["widget"] = widgets.UnfoldAdminNullBooleanSelectWidget()
@@ -114,8 +115,8 @@ class BaseModelAdminMixin:
         return db_field.formfield(**kwargs)
 
     def formfield_for_dbfield(
-        self, db_field: Field, request: HttpRequest, **kwargs
-    ) -> Field | None:
+        self, db_field: Field, request: HttpRequest, **kwargs: Any
+    ) -> FormField | None:
         if isinstance(db_field, models.BooleanField) and db_field.null is True:
             return self.formfield_for_nullboolean_field(db_field, request, **kwargs)
 
@@ -145,3 +146,58 @@ class BaseModelAdminMixin:
             )
 
         return formfield
+
+    def _show_ui_warnings(self, request: HttpRequest) -> bool:
+        return (
+            request.method == "GET"
+            and settings.DEBUG
+            and get_setting_value("SHOW_UI_WARNINGS", request) is True
+        )
+
+    def _display_autocomplete_fields_warnings(self, request: HttpRequest) -> None:
+        for missing_field in sorted(self._autocomplete_fields_missing):
+            messages.warning(
+                request,
+                format_html(
+                    _(
+                        'Field <strong class="font-semibold">{field_name}</strong> is not an autocomplete field. Please add it to the `autocomplete_fields` list.'
+                    ),  # ty:ignore[invalid-argument-type]
+                    field_name=missing_field,
+                ),
+            )
+
+            if missing_field in self._autocomplete_fields_missing:
+                self._autocomplete_fields_missing.remove(missing_field)
+
+    def _check_autocomplete_field(  # noqa: PLR0911
+        self,
+        db_field: Field,
+        formfield: ModelChoiceField | ModelMultipleChoiceField | None,
+        request: HttpRequest,
+    ) -> None:
+        # Field is already in autocomplete_fields
+        if db_field.name in self.get_autocomplete_fields(request):
+            return
+
+        # Readonly fields are not rendering large select dropdown
+        if db_field.name in self.get_readonly_fields(request):
+            return
+
+        # Raw ID field, no problem with SQL queries
+        if db_field.name in self.raw_id_fields:
+            return
+
+        # Make an exception for this special widget
+        if formfield is not None and isinstance(
+            formfield.widget, FilteredSelectMultiple
+        ):
+            return
+
+        # Sometimes we want to exclude a field from the warnings
+        if db_field.name in self.autocomplete_fields_excluded_from_warnings:
+            return
+
+        field_name = f"{self.__class__.__name__}.{db_field.name}"
+
+        if field_name not in self._autocomplete_fields_missing:
+            self._autocomplete_fields_missing.append(field_name)

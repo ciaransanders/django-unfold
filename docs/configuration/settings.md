@@ -19,6 +19,7 @@ UNFOLD = {
     "SITE_TITLE": "Custom suffix in <title> tag",
     "SITE_HEADER": "Appears in sidebar at the top",
     "SITE_SUBHEADER": "Appears under SITE_HEADER",
+    "SITE_VERSION": "0.1.0",
     "SITE_DROPDOWN": [
         {
             "icon": "diamond",
@@ -28,6 +29,10 @@ UNFOLD = {
         # ...
     ],
     "SITE_URL": "/",
+    "SITE_VIEWS": [
+        ("some-path-to-view", "name_of_view_1", "path.to.view_itself_1"),
+        ("other-path-to-view", "another_name_of_view_2", "path.to.view_itself_2"),
+    ],
     # "SITE_ICON": lambda request: static("icon.svg"),  # both modes, optimise for 32px height
     "SITE_ICON": {
         "light": lambda request: static("icon-light.svg"),  # light mode
@@ -50,6 +55,7 @@ UNFOLD = {
     "SHOW_HISTORY": True, # show/hide "History" button, default: True
     "SHOW_VIEW_ON_SITE": True, # show/hide "View on site" button, default: True
     "SHOW_BACK_BUTTON": False, # show/hide "Back" button on changeform in header, default: False
+    "SHOW_UI_WARNINGS": False, # show/hide warnings in UI, default: False
     "ENVIRONMENT": "sample_app.environment_callback", # environment name in header
     "ENVIRONMENT_TITLE_PREFIX": "sample_app.environment_title_prefix_callback", # environment name prefix in title tag
     "DASHBOARD_CALLBACK": "sample_app.dashboard_callback",
@@ -114,7 +120,6 @@ UNFOLD = {
     },
     "SIDEBAR": {
         "show_search": False,  # Search in applications and models names
-        "command_search": False,  # Replace the sidebar search with the command search
         "show_all_applications": False,  # Dropdown with all applications and models
         "navigation": [
             {

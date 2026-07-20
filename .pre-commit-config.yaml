@@ -8,11 +8,11 @@ repos:
       - id: check-symlinks
       - id: check-toml
       - id: end-of-file-fixer
-        exclude: CHANGELOG.md
+        exclude: ^(CHANGELOG\.md|src/unfold/static/unfold/css/styles\.css)$
       - id: trailing-whitespace
         exclude: CHANGELOG.md
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.2
+    rev: v0.15.21
     hooks:
       - id: ruff
         args:
@@ -25,12 +25,16 @@ repos:
         stages: [commit-msg]
         args: []
   - repo: https://github.com/rtts/djhtml
-    rev: 3.0.10
+    rev: 3.0.11
     hooks:
       - id: djhtml
         files: .*/templates/.*\.html$
   - repo: https://github.com/adamchainz/django-upgrade
-    rev: 1.29.1
+    rev: 1.31.1
     hooks:
       - id: django-upgrade
-        args: ['--target-version', '4.2']
+        args: ['--target-version', '5.2']
+  - repo: https://github.com/zizmorcore/zizmor-pre-commit
+    rev: v1.26.1
+    hooks:
+      - id: zizmor

@@ -60,7 +60,7 @@ class User(AbstractUser):
     status = models.CharField(
         _("Status"),
         max_length=20,
-        choices=StatusChoices.choices,
+        choices=StatusChoices,
         default=StatusChoices.ACTIVE,
         blank=True,
         null=True,
@@ -68,7 +68,7 @@ class User(AbstractUser):
     approval = models.CharField(
         _("Approval"),
         max_length=20,
-        choices=ApprovalChoices.choices,
+        choices=ApprovalChoices,
         default=ApprovalChoices.NEW,
         blank=True,
         null=True,
@@ -76,7 +76,7 @@ class User(AbstractUser):
     priority = models.CharField(
         _("Priority"),
         max_length=20,
-        choices=PriorityChoices.choices,
+        choices=PriorityChoices,
         default=PriorityChoices.MEDIUM,
         blank=True,
         null=True,
@@ -84,7 +84,7 @@ class User(AbstractUser):
     color = models.CharField(
         _("Color"),
         max_length=20,
-        choices=ColorChoices.choices,
+        choices=ColorChoices,
         default=ColorChoices.BLUE,
         blank=True,
         null=True,
@@ -105,6 +105,11 @@ class SectionUser(User):
 
 
 class ActionUser(User):
+    class Meta:
+        proxy = True
+
+
+class DialogActionUser(User):
     class Meta:
         proxy = True
 
@@ -141,6 +146,7 @@ class Label(models.Model):
 
 class Project(models.Model):
     name = models.CharField(max_length=255)
+    is_active = models.BooleanField(default=False)
 
     def __str__(self):
         return self.name
@@ -161,6 +167,22 @@ class Post(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class Invoice(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    name = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.name
+
+
+class InvoiceItem(models.Model):
+    name = models.CharField(max_length=255)
+    invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.name
 
 
 class Profile(models.Model):

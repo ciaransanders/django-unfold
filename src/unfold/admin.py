@@ -1,5 +1,5 @@
 from functools import update_wrapper
-from typing import Any
+from typing import Any, TypedDict
 
 from django import forms
 from django.contrib.admin import ModelAdmin as BaseModelAdmin
@@ -15,15 +15,12 @@ from django.contrib.contenttypes.admin import (
 )
 from django.db.models import BLANK_CHOICE_DASH, Model
 from django.http import HttpRequest, HttpResponse
-from django.shortcuts import redirect
-from django.template.response import TemplateResponse
 from django.urls import URLPattern, path
-from django.utils.safestring import mark_safe
+from django.utils.safestring import SafeString, mark_safe
 from django.utils.translation import gettext_lazy as _
 from django.views import View
 
 from unfold.checks import UnfoldModelAdminChecks
-from unfold.datasets import BaseDataset
 from unfold.forms import (
     ActionForm,
     PaginationGenericInlineFormSet,
@@ -31,11 +28,11 @@ from unfold.forms import (
 )
 from unfold.mixins import (
     ActionModelAdminMixin,
-    BaseModelAdminMixin,
     DatasetModelAdminMixin,
+    FormFieldModelAdminMixin,
+    NestedInlinesModelAdminMixin,
 )
 from unfold.overrides import FORMFIELD_OVERRIDES_INLINE
-from unfold.typing import FieldsetsType
 from unfold.views import ChangeList
 from unfold.widgets import UnfoldBooleanWidget
 
@@ -48,18 +45,27 @@ checkbox = UnfoldBooleanWidget(
 )
 
 
+class ListFilterOptionsItem(TypedDict):
+    label: str | None
+    horizontal: bool | None
+
+
 class ModelAdmin(
-    BaseModelAdminMixin, ActionModelAdminMixin, DatasetModelAdminMixin, BaseModelAdmin
+    FormFieldModelAdminMixin,
+    ActionModelAdminMixin,
+    DatasetModelAdminMixin,
+    NestedInlinesModelAdminMixin,
+    BaseModelAdmin,
 ):
     action_form = ActionForm
     custom_urls = ()
     add_fieldsets = ()
     ordering_field = None
     hide_ordering_field = False
-    list_horizontal_scrollbar_top = False
     list_filter_submit = False
     list_filter_buttons_top = False
     list_filter_sheet = True
+    list_filter_options: dict[str, ListFilterOptionsItem] = {}
     list_fullwidth = False
     list_disable_select_all = False
     list_before_template = None
@@ -68,8 +74,7 @@ class ModelAdmin(
     change_form_after_template = None
     change_form_outer_before_template = None
     change_form_outer_after_template = None
-    change_form_datasets = ()
-    compressed_fields = False
+    compressed_fields = True
     show_add_link = True
     readonly_preprocess_fields = {}
     warn_unsaved_form = False
@@ -77,10 +82,13 @@ class ModelAdmin(
 
     @property
     def media(self):
-        if not hasattr(self, "request"):
-            return super().media
-
         media = super().media
+
+        if hasattr(self, "nested_formset_media"):
+            media += self.nested_formset_media
+
+        if not hasattr(self, "request"):
+            return media
 
         for filter in self.get_list_filter(self.request):
             if (
@@ -96,7 +104,7 @@ class ModelAdmin(
 
     def changelist_view(
         self, request: HttpRequest, extra_context: dict[str, str] | None = None
-    ) -> TemplateResponse:
+    ) -> HttpResponse:
         self.request = request
 
         if self.ordering_field and self.ordering_field not in self.list_editable:
@@ -105,6 +113,25 @@ class ModelAdmin(
             self.list_editable = list_editable
 
         return super().changelist_view(request, extra_context)
+
+    def changeform_view(
+        self,
+        request: HttpRequest,
+        object_id: str | None = None,
+        form_url: str = "",
+        extra_context: dict[str, Any] | None = None,
+    ) -> Any:
+        from unfold.forms import AdminForm, Fieldline
+
+        helpers.AdminForm = AdminForm  # ty:ignore
+        helpers.Fieldline = Fieldline  # ty:ignore
+
+        response = super().changeform_view(request, object_id, form_url, extra_context)
+
+        if self._show_ui_warnings(request):
+            self._display_autocomplete_fields_warnings(request)
+
+        return response
 
     def get_list_display(self, request: HttpRequest) -> list | tuple:
         list_display = super().get_list_display(request)
@@ -119,7 +146,7 @@ class ModelAdmin(
 
     def get_fieldsets(
         self, request: HttpRequest, obj: Model | None = None
-    ) -> FieldsetsType:
+    ) -> list | tuple:
         if not obj and self.add_fieldsets:
             return self.add_fieldsets
         return super().get_fieldsets(request, obj)
@@ -200,24 +227,10 @@ class ModelAdmin(
         return super().get_action_choices(request, default_choices)
 
     @display(description=mark_safe(checkbox.render("action_toggle_all", 1)))
-    def action_checkbox(self, obj: Model) -> str:
+    def action_checkbox(self, obj: Model) -> SafeString:
         return checkbox.render(helpers.ACTION_CHECKBOX_NAME, str(obj.pk))
 
-    def response_change(self, request: HttpRequest, obj: Model) -> HttpResponse:
-        res = super().response_change(request, obj)
-        if "next" in request.GET:
-            return redirect(request.GET["next"])
-        return res
-
-    def response_add(
-        self, request: HttpRequest, obj: Model, post_url_continue: str | None = None
-    ) -> HttpResponse:
-        res = super().response_add(request, obj, post_url_continue)
-        if "next" in request.GET:
-            return redirect(request.GET["next"])
-        return res
-
-    def get_changelist(self, request: HttpRequest, **kwargs: Any) -> ChangeList:
+    def get_changelist(self, request: HttpRequest, **kwargs: Any) -> type[ChangeList]:
         return ChangeList
 
     def get_formset_kwargs(
@@ -229,10 +242,16 @@ class ModelAdmin(
             formset_kwargs["request"] = request
             formset_kwargs["per_page"] = inline.per_page
 
-        return formset_kwargs
+        if hasattr(inline, "show_count") and inline.show_count:
+            if hasattr(inline, "get_count") and callable(inline.get_count):
+                formset_kwargs["count"] = inline.get_count(request, obj)
 
-    def get_changeform_datasets(self, request: HttpRequest) -> list[type[BaseDataset]]:
-        return self.change_form_datasets
+            if hasattr(inline, "get_count_variant") and callable(
+                inline.get_count_variant
+            ):
+                formset_kwargs["count_variant"] = inline.get_count_variant(request, obj)
+
+        return formset_kwargs
 
 
 class BaseInlineMixin:
@@ -242,23 +261,26 @@ class BaseInlineMixin:
     per_page = None
     hide_ordering_field = False
     collapsible = False
+    show_count = False
+    hide_title = False
+    tab = False
 
 
-class TabularInline(BaseInlineMixin, BaseModelAdminMixin, BaseTabularInline):
+class TabularInline(BaseInlineMixin, FormFieldModelAdminMixin, BaseTabularInline):
     formset = PaginationInlineFormSet
 
 
-class StackedInline(BaseInlineMixin, BaseModelAdminMixin, BaseStackedInline):
+class StackedInline(BaseInlineMixin, FormFieldModelAdminMixin, BaseStackedInline):
     formset = PaginationInlineFormSet
 
 
 class GenericStackedInline(
-    BaseInlineMixin, BaseModelAdminMixin, BaseGenericStackedInline
+    BaseInlineMixin, FormFieldModelAdminMixin, BaseGenericStackedInline
 ):
     formset = PaginationGenericInlineFormSet
 
 
 class GenericTabularInline(
-    BaseInlineMixin, BaseModelAdminMixin, BaseGenericTabularInline
+    BaseInlineMixin, FormFieldModelAdminMixin, BaseGenericTabularInline
 ):
     formset = PaginationGenericInlineFormSet

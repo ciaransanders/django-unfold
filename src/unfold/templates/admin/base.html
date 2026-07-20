@@ -17,14 +17,14 @@
 
             {% block messages %}
                 <div class="px-4">
-                    <div class="{% if not cl.model_admin.list_fullwidth and is_fullwidth != "1" %}container{% endif %} mx-auto">
+                    <div class="{% if not cl.model_admin.list_fullwidth and is_fullwidth != "1" %}container{% endif %} mx-auto {% element_classes 'messages' %}">
                         {% include "unfold/helpers/messages.html" %}
                     </div>
                 </div>
             {% endblock messages %}
 
             <div class="@container px-4 pb-4 grow">
-                <div id="content" class="{% if not cl.model_admin.list_fullwidth and is_fullwidth != "1" %}container{% endif %} mx-auto {% block coltype %}colM{% endblock %}">
+                <div id="content" class="{% if not cl.model_admin.list_fullwidth and is_fullwidth != "1" %}container{% endif %} mx-auto {% block coltype %}colM{% endblock %} {% element_classes 'content' %}">
                     {% if errors or adminform.form.non_field_errors %}
                         <div class="flex flex-col gap-4">
                             {% include "unfold/helpers/messages/errornote.html" with errors=errors %}

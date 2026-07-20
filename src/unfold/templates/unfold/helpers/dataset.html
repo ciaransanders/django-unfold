@@ -2,7 +2,11 @@
 
 <div class="result-list-wrapper {% if not tab %}mt-6{% endif %}" x-data="{action: '', selectAcross: '0'}" {% if tab %}x-show="activeTab == 'dataset-{{ dataset.model_name }}'"{% else %}x-show="activeTab == 'general'"{% endif %}>
     {% if not tab %}
-        {% include "unfold/helpers/inline_heading.html" with title=dataset.model_verbose_name %}
+        {% if dataset.title %}
+            {% include "unfold/helpers/inline_heading.html" with title=dataset.title %}
+        {% else %}
+            {% include "unfold/helpers/inline_heading.html" with title=dataset.model_verbose_name %}
+        {% endif %}
     {% endif %}
 
     {% if cl.search_fields or action_form %}
@@ -20,7 +24,7 @@
     <form id="dataset-{{ dataset.model_name }}-group" class="group" method="post"{% if cl.formset and cl.formset.is_multipart %} enctype="multipart/form-data"{% endif %} novalidate>
         {% csrf_token %}
 
-        <input type="hidden" name="dataset" value="{{ id }}">
+        <input type="hidden" name="_dataset" value="{{ id }}">
         <input type="hidden" name="action" x-model="action">
         <input type="hidden" name="select_across" x-model="selectAcross">
 

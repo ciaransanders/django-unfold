@@ -1,5 +1,4 @@
 import json
-import warnings
 from collections.abc import Callable
 from typing import Any
 
@@ -118,17 +117,13 @@ TEXTAREA_CLASSES = [
     *BASE_INPUT_CLASSES,
     "max-w-4xl",
     "appearance-none",
-    "expandable",
-    "transition",
-    "transition-height",
-    "duration-75",
-    "ease-in-out",
 ]
 
 TEXTAREA_EXPANDABLE_CLASSES = [
     "block",
     "field-sizing-content",
     "min-h-[38px]",
+    "!max-w-2xl",
 ]
 
 SELECT_CLASSES = [
@@ -143,22 +138,29 @@ PROSE_CLASSES = [
     "font-normal",
     "whitespace-normal",
     "prose-sm",
+    "prose-a:text-link",
     "prose-blockquote:border-l-4",
     "prose-blockquote:not-italic",
     "prose-pre:bg-base-50",
     "prose-pre:rounded-default",
-    "prose-headings:font-medium",
-    "prose-a:text-primary-600",
-    "prose-headings:font-medium",
-    "prose-headings:text-base-700",
+    "prose-headings:font-semibold",
+    "prose-headings:text-important",
+    "prose-headings:tracking-tight",
+    "prose-strong:font-semibold",
     "prose-ol:list-decimal",
+    "prose-ol:flex",
+    "prose-ol:flex-col",
+    "prose-ol:gap-0.5",
+    "prose-ol:mt-2",
     "prose-ul:list-disc",
-    "prose-strong:text-base-700",
+    "prose-ul:flex",
+    "prose-ul:flex-col",
+    "prose-ul:gap-0.5",
+    "prose-ul:mt-2",
+    "prose-li:m-0",
     "dark:prose-pre:bg-base-800",
     "dark:prose-blockquote:border-base-700",
     "dark:prose-blockquote:text-base-300",
-    "dark:prose-headings:text-base-200",
-    "dark:prose-strong:text-base-200",
 ]
 
 CHECKBOX_CLASSES = [
@@ -239,7 +241,6 @@ SWITCH_CLASSES = [
     "h-5",
     "relative",
     "rounded-full",
-    "transition-colors",
     "w-8",
     "min-w-8",
     "disabled:cursor-not-allowed",
@@ -807,16 +808,6 @@ class UnfoldAdminCheckboxSelectMultipleWidget(CheckboxSelectMultiple):
         }
 
 
-class UnfoldAdminCheckboxSelectMultiple(UnfoldAdminCheckboxSelectMultipleWidget):
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
-        warnings.warn(
-            "UnfoldAdminCheckboxSelectMultiple is deprecated and will be removed in a future release. "
-            "Please use UnfoldAdminCheckboxSelectMultipleWidget instead.",
-            stacklevel=2,
-        )
-        super().__init__(*args, **kwargs)
-
-
 class UnfoldBooleanWidget(CheckboxInput):
     def __init__(
         self, attrs: dict[str, Any] | None = None, check_test: Callable | None = None
@@ -927,16 +918,6 @@ class UnfoldAdminPasswordToggleWidget(UnfoldAdminPasswordWidget):
     template_name = "unfold/widgets/password_toggle.html"
 
 
-class UnfoldAdminPasswordInput(UnfoldAdminPasswordWidget):
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
-        warnings.warn(
-            "UnfoldAdminPasswordInput is deprecated and will be removed in a future release. "
-            "Please use UnfoldAdminPasswordWidget instead.",
-            stacklevel=2,
-        )
-        super().__init__(*args, **kwargs)
-
-
 class AutocompleteWidgetMixin:
     is_required: bool
 
@@ -999,6 +980,10 @@ class UnfoldAdminMultipleAutocompleteModelChoiceFieldWidget(
     option_template_name = (
         "unfold/widgets/select_option_modelchoicefield_autocomplete.html"
     )
+
+
+class UnfoldAdminRelatedFieldWrapperWidget(RelatedFieldWidgetWrapper):
+    template_name = "unfold/widgets/related_widget_wrapper.html"
 
 
 try:

@@ -1,7 +1,7 @@
 import datetime
 import decimal
 import json
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from typing import Any
 
 from django.conf import settings
@@ -11,9 +11,11 @@ from django.template.loader import render_to_string
 from django.utils import formats, timezone
 from django.utils.hashable import make_hashable
 from django.utils.html import format_html
+from django.utils.module_loading import import_string
 from django.utils.safestring import SafeString, SafeText, mark_safe
 
 from unfold.exceptions import UnfoldException
+from unfold.settings import get_config
 
 try:
     from djmoney.models.fields import MoneyField
@@ -167,6 +169,29 @@ def prettify_json(data: Any, encoder: Any) -> SafeString | None:
     )
 
 
+def prettify_traceback(traceback: str) -> SafeString | None:
+    try:
+        from pygments import highlight
+        from pygments.formatters.html import HtmlFormatter
+        from pygments.lexers.python import PythonTracebackLexer
+    except ImportError:
+        return None
+
+    def format_response(response: str, theme: str) -> str:
+        formatter = HtmlFormatter(
+            style=theme,
+            noclasses=True,
+            nobackground=True,
+            prestyles="white-space: pre-wrap; word-wrap: break-word;",
+        )
+        return highlight(response, PythonTracebackLexer(), formatter)
+
+    return mark_safe(
+        f'<div class="block dark:hidden">{format_response(traceback, "colorful")}</div>'
+        f'<div class="hidden dark:block">{format_response(traceback, "monokai")}</div>'
+    )
+
+
 def parse_date_str(value: str) -> datetime.date | None:
     for format in settings.DATE_INPUT_FORMATS:
         try:
@@ -208,5 +233,32 @@ def convert_color(value: str) -> str:
         part.strip().isdigit() for part in value.split(",")
     ):
         return f"rgb({', '.join(part.strip() for part in value.split(','))})"
+
+    return value
+
+
+def get_setting_value(key: str, *args: Any, **kwargs: Any) -> Any:
+    settings_name = kwargs.pop("settings_name", "UNFOLD")
+    config = get_config(settings_name)
+
+    if key in config:
+        return resolve_setting_value(config[key], *args)
+
+
+def resolve_setting_value(value: str | Callable | None, *args: Any) -> Any:
+    if value is None:
+        return None
+
+    if isinstance(value, str):
+        try:
+            callback = import_string(value)
+            return callback(*args)
+        except ImportError:
+            pass
+
+        return value
+
+    if isinstance(value, Callable):
+        return value(*args)
 
     return value

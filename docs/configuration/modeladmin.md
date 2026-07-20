@@ -25,7 +25,7 @@ class CustomAdminClass(ModelAdmin):
     show_add_link = True  # Default: True
 
     # Display fields in changeform in compressed mode
-    compressed_fields = True  # Default: False
+    compressed_fields = True  # Default: True
 
     # Warn before leaving unsaved changes in changeform
     warn_unsaved_form = True  # Default: False
@@ -42,16 +42,21 @@ class CustomAdminClass(ModelAdmin):
     # Display submit/clear all filters buttons at top of list filters, instead of the bottom
     list_filter_buttons_top = False
 
+    # Custom filter options
+    list_filter_options = {
+        "your_filter_field_path": {
+            "label": "Custom label", # Optional: custom label for the filter
+            "horizontal": True, # Optional: display filter in horizontal layout
+        }
+    }
+
     # Display changelist in fullwidth
     list_fullwidth = False
 
     # Set to False, to enable filter as "sidebar"
     list_filter_sheet = True
 
-    # Position horizontal scrollbar in changelist at the top
-    list_horizontal_scrollbar_top = False
-
-    # Dsable select all action in changelist
+    # Disable select all action in changelist
     list_disable_select_all = False
 
     # Custom actions
