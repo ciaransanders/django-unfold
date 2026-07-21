@@ -67,6 +67,10 @@ Diff baseline: `git diff main...custom`.
 - **`admin/change_list_results.html`**: removed the `whitespace-nowrap` Tailwind class
   from the `#result_list` `<table>` so changelist result cells wrap instead of forcing a
   single line.
+- **`unfold/helpers/edit_inline/inline_links.html`**: the inline "Change"/"View" links
+  are now **always visible** (dropped the `group-hover/title:block hidden` hover-reveal on
+  the wrapping `<span>`, replaced with `inline-block`), and the "Change" link opens in a
+  new tab (`target="_blank" rel="noopener"`, matching the existing "View" link).
 
 ## 3. CSS (`src/unfold/styles.css`)
 
