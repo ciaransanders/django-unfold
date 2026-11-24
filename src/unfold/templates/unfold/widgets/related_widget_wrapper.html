@@ -8,14 +8,6 @@
             {% spaceless %}
                 {% if not is_hidden %}
                     {% if can_add_related or can_change_related or can_delete_related or can_view_related %}
-                        {% if related_url %}
-                            <a class="related-lookup bg-white border border-base-200 cursor-pointer flex items-center h-[38px] justify-center ml-2 rounded-default shadow-xs shrink-0 text-base-400 text-sm w-[38px] hover:text-base-700 dark:bg-base-900 dark:border-base-700 dark:text-base-500 dark:hover:text-base-200"
-                               id="lookup_id_{{ name }}"
-                               href="{{ related_url }}">
-                                <span class="material-symbols-outlined">search</span>
-                            </a>
-                        {% endif %}
-
                         <div x-data="{ openRelatedWidgetWrapper: false }">
                             <div class="bg-white border border-base-200 cursor-pointer flex items-center h-[38px] justify-center ml-2 rounded-default select-none shadow-xs shrink-0 text-base-400 text-sm w-[38px] hover:text-base-700 dark:bg-base-900 dark:border-base-700 dark:text-base-500 dark:hover:text-base-200 focus:outline-2 focus:-outline-offset-2 focus:outline-primary-600"
                                  x-ref="relatedWidgetWrapper{{ name }}"
@@ -32,6 +24,12 @@
                                      x-on:keydown.escape="openRelatedWidgetWrapper = false"
                                      x-anchor.bottom-end.offset.4="$refs['relatedWidgetWrapper{{ name }}']"
                                      x-show="openRelatedWidgetWrapper">
+                                    {% if related_url %}
+                                        <a class="related-lookup" id="lookup_id_{{ name }}" href="{{ related_url }}" title="{% blocktranslate %}Search {{ model }}{% endblocktranslate %}">
+                                            <span class="material-symbols-outlined -ml-1.5 text-icon">search</span> <span class="grow truncate">{% blocktranslate %}Search {{ model }}{% endblocktranslate %}</span>
+                                        </a>
+                                    {% endif %}
+
                                     {% if can_change_related %}
                                         <a class=" related-widget-wrapper-link change-related" id="change_id_{{ name }}" data-href-template="{{ change_related_template_url }}?{{ url_params }}" data-popup="yes" title="{% blocktranslate %}Change selected {{ model }}{% endblocktranslate %}">
                                             <span class="material-symbols-outlined -ml-1.5 text-icon">edit</span> <span class="grow truncate">{% blocktranslate %}Change selected {{ model }}{% endblocktranslate %}</span>

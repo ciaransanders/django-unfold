@@ -42,7 +42,10 @@ Diff baseline: `git diff main...custom`.
   add/change/delete/view permissions. If the related model has **no registered admin**,
   the wrapper is omitted.
 - `src/unfold/templates/unfold/widgets/related_widget_wrapper.html`: renders the
-  `related_url` magnifying-glass (`material-symbols-outlined: search`) link.
+  `related_url` magnifying-glass (`material-symbols-outlined: search`) link as the first
+  item in the related-links dropdown (the `more_vert` menu), not as a standalone button.
+  The dropdown is teleported to `<body>`, so JS must find the link by its
+  `lookup_id_<name>` id rather than by walking from the widget.
 - `src/unfold/static/admin/js/admin/RelatedObjectLookups.js`:
   `dismissRelatedLookupPopup` extended to handle `<select>` (select2 autocomplete)
   targets — injects a new `Option` and dispatches `change`; now also receives/uses the
